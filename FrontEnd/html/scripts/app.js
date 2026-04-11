@@ -19,16 +19,20 @@ const searchInput = document.getElementById('searchInput');
 const searchResults = document.getElementById('searchResults');
 
 // Build index from all cards in the DOM
-const allCards = [];
-document.querySelectorAll('.category').forEach(section => {
-    const catName = section.querySelector('h2').textContent.trim();
-    section.querySelectorAll('.card').forEach(card => {
-        allCards.push({
-            title: card.querySelector('.card-title').textContent,
-            desc: card.querySelector('.card-desc').textContent,
-            tag: card.querySelector('.tag').textContent,
-            href: card.href,
-            category: catName,
+let allCards = [];
+
+// Wait for DOM to be ready before building search index
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.category').forEach(section => {
+        const catName = section.querySelector('h2').textContent.trim();
+        section.querySelectorAll('.card').forEach(card => {
+            allCards.push({
+                title: card.querySelector('.card-title').textContent,
+                desc: card.querySelector('.card-desc').textContent,
+                tag: card.querySelector('.tag').textContent,
+                href: card.href,
+                category: catName,
+            });
         });
     });
 });
