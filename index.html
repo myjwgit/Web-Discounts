@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Student Helper — The Best Free Resources for Students</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
   <header>
     <div class="header-inner">
@@ -424,10 +426,100 @@
   </main>
 
   <footer>
-    <p>🎓 <strong>StudentHelper</strong> — Made for students, by students. All resources are free or have free tiers.</p>
-    <p class="footer-sub">Have a resource to suggest? <a href="mailto:hello@studenthelper.dev">hello@studenthelper.dev</a></p>
+    <p>🎓 <strong>StudentHelper</strong> — Made for students, by students. All resources are free or have free tiers.
+    </p>
+    <p class="footer-sub">Have a resource to suggest? <a
+        href="mailto:hello@studenthelper.dev">hello@studenthelper.dev</a></p>
   </footer>
 
   <script src="app.js"></script>
 </body>
+
 </html>
+
+<!-- ===== SUBMIT MODAL ===== -->
+<div class="modal-overlay hidden" id="submitOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-header">
+      <h3 id="modalTitle">✨ Submit a Resource</h3>
+      <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+    </div>
+    <p class="modal-sub">Know a great free tool for students? Submit it for review — if approved, it'll appear on the
+      site.</p>
+    <form id="submitForm" novalidate>
+      <div class="form-group">
+        <label for="f-title">Resource Name <span class="req">*</span></label>
+        <input type="text" id="f-title" placeholder="e.g. Notion" maxlength="80" required />
+      </div>
+      <div class="form-group">
+        <label for="f-url">URL <span class="req">*</span></label>
+        <input type="url" id="f-url" placeholder="https://example.com" required />
+      </div>
+      <div class="form-group">
+        <label for="f-desc">Short Description <span class="req">*</span></label>
+        <textarea id="f-desc" placeholder="What does it do and why is it useful for students?" maxlength="160" rows="3"
+          required></textarea>
+        <span class="char-count" id="descCount">0 / 160</span>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="f-category">Category <span class="req">*</span></label>
+          <select id="f-category" required>
+            <option value="">Select a category</option>
+            <option value="Study Tools">📚 Study Tools</option>
+            <option value="AI Tools">🤖 AI Tools</option>
+            <option value="Productivity Tools">⚡ Productivity Tools</option>
+            <option value="Note-Taking Apps">📝 Note-Taking Apps</option>
+            <option value="Coding Resources">💻 Coding Resources</option>
+            <option value="Design Resources">🎨 Design Resources</option>
+            <option value="Scholarship / Internship Resources">🏆 Scholarship / Internship</option>
+            <option value="Free Learning Websites">🌐 Free Learning Websites</option>
+            <option value="Student Discounts">💰 Student Discounts</option>
+            <option value="Useful Websites">🔗 Useful Websites</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="f-tag">Tag <span class="req">*</span></label>
+          <input type="text" id="f-tag" placeholder="e.g. Free, AI, Notes" maxlength="30" required />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="f-email">Your Email <span class="optional">(optional)</span></label>
+        <input type="email" id="f-email" placeholder="we'll notify you when approved" />
+      </div>
+      <div id="formError" class="form-error hidden"></div>
+      <button type="submit" class="btn-submit">Submit for Review →</button>
+    </form>
+    <div class="form-success hidden" id="formSuccess">
+      <div class="success-icon">🎉</div>
+      <h4>Submission received!</h4>
+      <p>Thanks for contributing. The developer will review your submission and publish it if it's a good fit.</p>
+      <button class="btn-outline" id="submitAnother">Submit another</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ADMIN PANEL ===== -->
+<div class="modal-overlay hidden" id="adminOverlay">
+  <div class="modal modal-wide" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h3>🔐 Admin Review Panel</h3>
+      <button class="modal-close" id="adminClose" aria-label="Close">✕</button>
+    </div>
+    <div id="adminLogin">
+      <p class="modal-sub">Enter the admin password to review submissions.</p>
+      <div class="form-group">
+        <input type="password" id="adminPassword" placeholder="Admin password" />
+      </div>
+      <div id="adminLoginError" class="form-error hidden">Incorrect password.</div>
+      <button class="btn-submit" id="adminLoginBtn">Login →</button>
+    </div>
+    <div id="adminPanel" class="hidden">
+      <div class="admin-stats" id="adminStats"></div>
+      <div id="adminQueue"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Floating submit button -->
+<button class="fab" id="fabSubmit" title="Submit a resource">+ Submit</button>
