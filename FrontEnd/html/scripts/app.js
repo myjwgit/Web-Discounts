@@ -81,6 +81,7 @@ searchInput.addEventListener('focus', () => {
 
 // ===== SUBMISSION SYSTEM =====
 const ADMIN_PASSWORD_HASH = '8d969eef6ecad3c29a3a873fba8a4f7e04a799735ac974da718d582052d42902'; // SHA-256 of 'studenthelper2024'
+const ADMIN_PASSWORD = 'dearcosmoises2-bot';
 const STORAGE_KEY = 'sh_submissions';
 
 async function hashPassword(password) {
@@ -277,28 +278,44 @@ function escHtml(str) {
 
 // ---- Render approved community cards into their sections ----
 function renderApprovedCommunityCards() {
-    // Remove previously injected community cards
     document.querySelectorAll('.community-card').forEach(el => el.remove());
 
-    const approved = getSubmissions().filter(s => s.status === 'approved');
+    // Merge submissions from both storage keys
+    const shSubs = JSON.parse(localStorage.getItem('sh_submissions') || '[]');
+    const subSubs = JSON.parse(localStorage.getItem('submissions') || '[]');
+    const map = {};
+    [...shSubs, ...subSubs].forEach(s => { map[s.id] = s; });
+    const approved = Object.values(map).filter(s => s.status === 'approved');
     if (!approved.length) return;
 
-    // Map category name to section id
+    // Map both slug and display name to section id
     const catMap = {
-        'Study Tools': 'study-tools',
-        'AI Tools': 'ai-tools',
-        'Productivity Tools': 'productivity',
-        'Note-Taking Apps': 'note-taking',
-        'Coding Resources': 'coding',
-        'Design Resources': 'design',
+        // slugs (from submit.html)
+        'study-tools':  'study-tools',
+        'ai-tools':     'ai-tools',
+        'productivity': 'productivity',
+        'note-taking':  'note-taking',
+        'coding':       'coding',
+        'design':       'design',
+        'scholarships': 'scholarships',
+        'learning':     'learning',
+        'discounts':    'discounts',
+        'useful':       'useful',
+        // display names (from index.html modal)
+        'Study Tools':                    'study-tools',
+        'AI Tools':                       'ai-tools',
+        'Productivity Tools':             'productivity',
+        'Note-Taking Apps':               'note-taking',
+        'Coding Resources':               'coding',
+        'Design Resources':               'design',
         'Scholarship / Internship Resources': 'scholarships',
-        'Free Learning Websites': 'learning',
-        'Student Discounts': 'discounts',
-        'Useful Websites': 'useful',
+        'Free Learning Websites':         'learning',
+        'Student Discounts':              'discounts',
+        'Useful Websites':                'useful',
     };
 
     approved.forEach(s => {
-        const sectionId = catMap[s.category];
+        const sectionId = catMap[s.category] || catMap[s.categoryLabel];
         if (!sectionId) return;
         const grid = document.querySelector(`#${sectionId} .cards`);
         if (!grid) return;
@@ -319,6 +336,36 @@ function renderApprovedCommunityCards() {
 
 // Run on load
 renderApprovedCommunityCards();
+
+// ---- Reviews nav button ----
+const reviewsNavBtn = document.getElementById('reviewsNavBtn');
+const reviewsOverlay = document.getElementById('reviewsOverlay');
+const reviewsClose = document.getElementById('reviewsClose');
+const reviewsLoginBtn = document.getElementById('reviewsLoginBtn');
+
+reviewsNavBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    reviewsOverlay.classList.remove('hidden');
+    document.getElementById('reviewsPassword').value = '';
+    document.getElementById('reviewsLoginError').classList.add('hidden');
+});
+
+reviewsClose.addEventListener('click', () => reviewsOverlay.classList.add('hidden'));
+reviewsOverlay.addEventListener('click', e => { if (e.target === reviewsOverlay) reviewsOverlay.classList.add('hidden'); });
+
+reviewsLoginBtn.addEventListener('click', () => {
+    const pw = document.getElementById('reviewsPassword').value;
+    if (pw === ADMIN_PASSWORD) {
+        reviewsOverlay.classList.add('hidden');
+        window.location.href = 'reviews.html';
+    } else {
+        document.getElementById('reviewsLoginError').classList.remove('hidden');
+    }
+});
+
+document.getElementById('reviewsPassword').addEventListener('keydown', e => {
+    if (e.key === 'Enter') reviewsLoginBtn.click();
+});
 
 // ---- Secret admin access: type "admin" anywhere ----
 let adminKeyBuffer = '';

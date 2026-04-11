@@ -46,6 +46,7 @@
         <a href="#learning">Learning</a>
         <a href="#discounts">Discounts</a>
         <a href="#useful">Useful</a>
+        <a href="#" id="reviewsNavBtn">Reviews</a>
       </nav>
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
     </div>
@@ -904,7 +905,23 @@
   </div>
 
   <!-- Floating submit button -->
-  <button class="fab" id="fabSubmit" title="Submit a resource">+ Submit</button>
+  <button class="fab" id="fabSubmit" title="Submit a resource" onclick="window.location.href='submit.html'">+ Submit</button>
+
+  <!-- ===== REVIEWS PASSWORD MODAL ===== -->
+  <div class="modal-overlay hidden" id="reviewsOverlay">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h3>🔐 Reviews Access</h3>
+        <button class="modal-close" id="reviewsClose" aria-label="Close">✕</button>
+      </div>
+      <p class="modal-sub">Enter the password to view submitted resources.</p>
+      <div class="form-group">
+        <input type="password" id="reviewsPassword" placeholder="Enter password" />
+      </div>
+      <div id="reviewsLoginError" class="form-error hidden">Incorrect password.</div>
+      <button class="btn-submit" id="reviewsLoginBtn">Enter →</button>
+    </div>
+  </div>
 
   <script src="scripts/app.js"></script>
 </body>

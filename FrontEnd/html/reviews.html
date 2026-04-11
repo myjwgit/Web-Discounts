@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reviews — StudentHelper</title>
+  <link rel="stylesheet" href="./css/style.css" />
+  <style>
+    .reviews-page {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+    .reviews-page h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .reviews-page .page-sub {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 32px;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.88rem;
+      margin-bottom: 32px;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--accent2); }
+    .review-stats {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+    .review-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+    .review-tab {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+    .review-tab.active {
+      background: var(--accent-glow);
+      border-color: var(--accent);
+      color: var(--accent2);
+    }
+    .review-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 14px;
+    }
+    .review-card.approved { border-color: #34d399; }
+    .review-card.rejected { border-color: #f87171; opacity: 0.65; }
+    .review-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .review-card-title { font-weight: 700; font-size: 1rem; }
+    .review-card-url { font-size: 0.8rem; color: var(--accent2); word-break: break-all; }
+    .review-card-url a { color: var(--accent2); text-decoration: none; }
+    .review-card-url a:hover { text-decoration: underline; }
+    .review-card-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 8px 0;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+    .review-card-meta span {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 2px 10px;
+    }
+    .review-card-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px; }
+    .review-actions { display: flex; gap: 8px; }
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="header-inner">
+      <a class="logo" href="./index.html">
+        <span class="logo-icon">🎓</span>
+        <span class="logo-text">Student<strong>Helper</strong></span>
+      </a>
+      <nav class="nav-links">
+        <a href="./index.html#study-tools">Study</a>
+        <a href="./index.html#ai-tools">AI</a>
+        <a href="./index.html#productivity">Productivity</a>
+        <a href="./index.html#note-taking">Notes</a>
+        <a href="./index.html#coding">Coding</a>
+        <a href="./index.html#design">Design</a>
+        <a href="./index.html#scholarships">Scholarships</a>
+        <a href="./index.html#learning">Learning</a>
+        <a href="./index.html#discounts">Discounts</a>
+        <a href="./index.html#useful">Useful</a>
+      </nav>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="reviews-page">
+      <a class="back-link" href="./index.html">← Back to StudentHelper</a>
+      <h1>📋 Submitted Resources</h1>
+      <p class="page-sub">Review, approve, or reject community-submitted resources.</p>
+
+      <div class="review-stats" id="reviewStats"></div>
+      <div class="review-tabs" id="reviewTabs"></div>
+      <div id="reviewList"></div>
+    </div>
+  </main>
+
+  <footer>
+    <p>🎓 <strong>StudentHelper</strong> — Made for students, by students.</p>
+  </footer>
+
+  <script>
+    // Theme
+    const themeToggle = document.getElementById('themeToggle');
+    const html = document.documentElement;
+    const saved = localStorage.getItem('theme') || 'dark';
+    html.setAttribute('data-theme', saved);
+    themeToggle.textContent = saved === 'dark' ? '🌙' : '☀️';
+    themeToggle.addEventListener('click', () => {
+      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      themeToggle.textContent = next === 'dark' ? '🌙' : '☀️';
+    });
+
+    const STORAGE_KEY = 'sh_submissions';
+    const SUBMISSIONS_KEY = 'submissions'; // also check submit.html key
+
+    function getAllSubmissions() {
+      const a = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      const b = JSON.parse(localStorage.getItem(SUBMISSIONS_KEY) || '[]');
+      // Merge, deduplicate by id
+      const map = {};
+      [...a, ...b].forEach(s => { map[s.id] = s; });
+      return Object.values(map);
+    }
+
+    function saveSubmission(updated) {
+      // Save back to both keys
+      const all = getAllSubmissions().map(s => s.id === updated.id ? updated : s);
+      const shSubs = all.filter(s => localStorage.getItem(STORAGE_KEY) && JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]').find(x => x.id === s.id));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+      localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(all));
+    }
+
+    function escHtml(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    let currentFilter = 'pending';
+
+    function render(filter) {
+      currentFilter = filter;
+      const all = getAllSubmissions();
+      const pending  = all.filter(s => s.status === 'pending');
+      const approved = all.filter(s => s.status === 'approved');
+      const rejected = all.filter(s => s.status === 'rejected');
+
+      document.getElementById('reviewStats').innerHTML = `
+        <span class="stat-pill">📥 Pending: ${pending.length}</span>
+        <span class="stat-pill">✅ Approved: ${approved.length}</span>
+        <span class="stat-pill">❌ Rejected: ${rejected.length}</span>
+      `;
+
+      document.getElementById('reviewTabs').innerHTML = `
+        <button class="review-tab ${filter === 'pending'  ? 'active' : ''}" onclick="render('pending')">Pending (${pending.length})</button>
+        <button class="review-tab ${filter === 'approved' ? 'active' : ''}" onclick="render('approved')">Approved (${approved.length})</button>
+        <button class="review-tab ${filter === 'rejected' ? 'active' : ''}" onclick="render('rejected')">Rejected (${rejected.length})</button>
+      `;
+
+      const filtered = all.filter(s => s.status === filter);
+      const list = document.getElementById('reviewList');
+
+      if (filtered.length === 0) {
+        list.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div>No ${filter} submissions.</div>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map(s => `
+        <div class="review-card ${s.status}" id="rc-${s.id}">
+          <div class="review-card-header">
+            <div>
+              <div class="review-card-title">${escHtml(s.title)}</div>
+              <div class="review-card-url"><a href="${escHtml(s.url)}" target="_blank" rel="noopener">${escHtml(s.url)}</a></div>
+            </div>
+            <span class="status-badge ${s.status}">${s.status}</span>
+          </div>
+          <div class="review-card-meta">
+            <span>📂 ${escHtml(s.category || s.categoryLabel || '')}</span>
+            <span>🏷 ${escHtml(s.tag)}</span>
+            ${s.email ? `<span>✉️ ${escHtml(s.email)}</span>` : ''}
+            <span>🕐 ${new Date(s.submittedAt).toLocaleDateString()}</span>
+          </div>
+          <div class="review-card-desc">${escHtml(s.desc)}</div>
+          ${s.status === 'pending' ? `
+          <div class="review-actions">
+            <button class="btn-approve" onclick="updateStatus('${s.id}', 'approved')">✅ Approve</button>
+            <button class="btn-reject"  onclick="updateStatus('${s.id}', 'rejected')">❌ Reject</button>
+          </div>` : ''}
+        </div>
+      `).join('');
+    }
+
+    window.updateStatus = function(id, status) {
+      const all = getAllSubmissions();
+      const idx = all.findIndex(s => String(s.id) === String(id));
+      if (idx === -1) return;
+      all[idx].status = status;
+      // Write back to both keys so index.html picks it up
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+      localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(all));
+      render(currentFilter);
+    };
+
+    render('pending');
+  </script>
+</body>
+
+</html>
