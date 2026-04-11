@@ -14,6 +14,39 @@ themeToggle.addEventListener('click', () => {
     themeToggle.textContent = next === 'dark' ? '🌙' : '☀️';
 });
 
+function buildFaviconUrl(href) {
+    try {
+        const { hostname } = new URL(href);
+        return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=64`;
+    } catch {
+        return '';
+    }
+}
+
+function attachCardLogos(root = document) {
+    root.querySelectorAll('.card[href]').forEach(card => {
+        if (card.querySelector('.card-logo')) return;
+
+        const logoUrl = buildFaviconUrl(card.href);
+        if (!logoUrl) return;
+
+        const title = card.querySelector('.card-title')?.textContent?.trim() || 'Website';
+        const img = document.createElement('img');
+        img.className = 'card-logo';
+        img.src = logoUrl;
+        img.alt = `${title} logo`;
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        img.referrerPolicy = 'no-referrer';
+        img.width = 42;
+        img.height = 42;
+
+        card.insertBefore(img, card.firstChild);
+    });
+}
+
+attachCardLogos();
+
 // ===== SEARCH =====
 const searchInput = document.getElementById('searchInput');
 const searchResults = document.getElementById('searchResults');
@@ -332,6 +365,8 @@ function renderApprovedCommunityCards() {
     `;
         grid.appendChild(a);
     });
+
+    attachCardLogos();
 }
 
 // Run on load
