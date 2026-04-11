@@ -158,7 +158,7 @@ document.getElementById('submitForm').addEventListener('submit', e => {
     all.push(submission);
     saveSubmissions(all);
 
-    document.getElementById('submitForm').classList.add('hidden');
+    document.getElementById('submitForm').remove();
     document.getElementById('formSuccess').classList.remove('hidden');
 });
 
