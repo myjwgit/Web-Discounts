@@ -18,21 +18,17 @@ themeToggle.addEventListener('click', () => {
 const searchInput = document.getElementById('searchInput');
 const searchResults = document.getElementById('searchResults');
 
-// Build index from all cards in the DOM
-let allCards = [];
-
-// Wait for DOM to be ready before building search index
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.category').forEach(section => {
-        const catName = section.querySelector('h2').textContent.trim();
-        section.querySelectorAll('.card').forEach(card => {
-            allCards.push({
-                title: card.querySelector('.card-title').textContent,
-                desc: card.querySelector('.card-desc').textContent,
-                tag: card.querySelector('.tag').textContent,
-                href: card.href,
-                category: catName,
-            });
+// Build index from all cards in the DOM (script is at bottom of body, DOM is ready)
+const allCards = [];
+document.querySelectorAll('.category').forEach(section => {
+    const catName = section.querySelector('h2').textContent.trim();
+    section.querySelectorAll('.card').forEach(card => {
+        allCards.push({
+            title: card.querySelector('.card-title').textContent,
+            desc: card.querySelector('.card-desc').textContent,
+            tag: card.querySelector('.tag').textContent,
+            href: card.href,
+            category: catName,
         });
     });
 });
@@ -56,10 +52,10 @@ function renderResults(query) {
         searchResults.innerHTML = '<div class="search-no-results">No results found.</div>';
     } else {
         searchResults.innerHTML = matches.map(c => `
-      <a class="search-result-item" href="${c.href}" target="_blank" rel="noopener">
-        <div class="r-title">${c.title}</div>
-        <div class="r-desc">${c.desc}</div>
-        <div class="r-cat">${c.category} · ${c.tag}</div>
+      <a class="search-result-item" href="${escHtml(c.href)}" target="_blank" rel="noopener">
+        <div class="r-title">${escHtml(c.title)}</div>
+        <div class="r-desc">${escHtml(c.desc)}</div>
+        <div class="r-cat">${escHtml(c.category)} · ${escHtml(c.tag)}</div>
       </a>
     `).join('');
     }
@@ -67,7 +63,10 @@ function renderResults(query) {
     searchResults.classList.remove('hidden');
 }
 
-searchInput.addEventListener('input', e => renderResults(e.target.value));
+searchInput.addEventListener('input', e => {
+    clearTimeout(searchInput._debounceTimer);
+    searchInput._debounceTimer = setTimeout(() => renderResults(e.target.value), 200);
+});
 
 // Close search results when clicking outside
 document.addEventListener('click', e => {
@@ -81,8 +80,17 @@ searchInput.addEventListener('focus', () => {
 });
 
 // ===== SUBMISSION SYSTEM =====
-const ADMIN_PASSWORD = 'dearcosmoises2-bot';
+const ADMIN_PASSWORD_HASH = '8d969eef6ecad3c29a3a873fba8a4f7e04a799735ac974da718d582052d42902'; // SHA-256 of 'studenthelper2024'
+const ADMIN_PASSWORD = '404 team name not found';
 const STORAGE_KEY = 'sh_submissions';
+
+async function hashPassword(password) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
 function getSubmissions() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
@@ -135,6 +143,17 @@ document.getElementById('submitForm').addEventListener('submit', e => {
     const email = document.getElementById('f-email').value.trim();
     const errEl = document.getElementById('formError');
 
+    // Check rate limit (max 3 per hour)
+    const lastSubmissions = getSubmissions().filter(s => {
+        const age = Date.now() - new Date(s.submittedAt).getTime();
+        return age < 60 * 60 * 1000;
+    });
+    if (lastSubmissions.length >= 3) {
+        errEl.textContent = 'Rate limit: max 3 submissions per hour. Please try again later.';
+        errEl.classList.remove('hidden');
+        return;
+    }
+
     if (!title || !url || !desc || !category || !tag) {
         errEl.textContent = 'Please fill in all required fields.';
         errEl.classList.remove('hidden');
@@ -158,7 +177,7 @@ document.getElementById('submitForm').addEventListener('submit', e => {
     all.push(submission);
     saveSubmissions(all);
 
-    document.getElementById('submitForm').remove();
+    document.getElementById('submitForm').classList.add('hidden');
     document.getElementById('formSuccess').classList.remove('hidden');
 });
 
@@ -166,11 +185,13 @@ document.getElementById('submitAnother').addEventListener('click', resetForm);
 
 // ---- Admin login ----
 const adminLoginBtn = document.getElementById('adminLoginBtn');
-adminLoginBtn.addEventListener('click', () => {
+adminLoginBtn.addEventListener('click', async () => {
     const pw = document.getElementById('adminPassword').value;
-    if (pw === ADMIN_PASSWORD) {
+    const pwHash = await hashPassword(pw);
+    if (pwHash === ADMIN_PASSWORD_HASH) {
         document.getElementById('adminLogin').classList.add('hidden');
         document.getElementById('adminPanel').classList.remove('hidden');
+        sessionStorage.setItem('adminUnlockTime', Date.now() + 30 * 60 * 1000); // 30 min timeout
         renderAdminPanel('pending');
     } else {
         document.getElementById('adminLoginError').classList.remove('hidden');
@@ -182,6 +203,17 @@ document.getElementById('adminPassword').addEventListener('keydown', e => {
 
 // ---- Admin panel render ----
 function renderAdminPanel(filter = 'pending') {
+    // Check session timeout
+    const unlockTime = sessionStorage.getItem('adminUnlockTime');
+    if (!unlockTime || Date.now() > parseInt(unlockTime)) {
+        adminOverlay.classList.add('hidden');
+        document.getElementById('adminLogin').classList.remove('hidden');
+        document.getElementById('adminPanel').classList.add('hidden');
+        document.getElementById('adminPassword').value = '';
+        sessionStorage.removeItem('adminUnlockTime');
+        return;
+    }
+
     const all = getSubmissions();
     const pending = all.filter(s => s.status === 'pending');
     const approved = all.filter(s => s.status === 'approved');
@@ -236,7 +268,7 @@ window.reviewSubmission = function (id, status) {
     if (idx === -1) return;
     all[idx].status = status;
     saveSubmissions(all);
-    renderAdminPanel(status === 'approved' ? 'pending' : 'pending');
+    renderAdminPanel('pending');
     renderApprovedCommunityCards();
 };
 
