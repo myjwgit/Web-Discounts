@@ -81,7 +81,7 @@ searchInput.addEventListener('focus', () => {
 
 // ===== SUBMISSION SYSTEM =====
 const ADMIN_PASSWORD_HASH = '8d969eef6ecad3c29a3a873fba8a4f7e04a799735ac974da718d582052d42902'; // SHA-256 of 'studenthelper2024'
-const ADMIN_PASSWORD = 'dearcosmoises2-bot';
+const ADMIN_PASSWORD = '404 team name not found';
 const STORAGE_KEY = 'sh_submissions';
 
 async function hashPassword(password) {
