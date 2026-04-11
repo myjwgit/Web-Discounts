@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Submit a Resource — StudentHelper</title>
+  <link rel="stylesheet" href="./css/style.css" />
+  <style>
+    /* Page-specific overrides */
+    .submit-page {
+      max-width: 620px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    .submit-page .page-header {
+      margin-bottom: 32px;
+    }
+
+    .submit-page .page-header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .submit-page .page-header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .submit-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: var(--shadow);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.88rem;
+      margin-bottom: 32px;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--accent2); }
+
+    /* Tag suggestions */
+    .tag-suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .tag-suggestion {
+      background: var(--tag-bg);
+      color: var(--tag-color);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 50px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .tag-suggestion:hover {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    .tag-hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    /* Category icon preview */
+    .category-preview {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      min-height: 24px;
+    }
+    .category-preview span { color: var(--accent2); font-weight: 600; }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="header-inner">
+      <a class="logo" href="./index.html">
+        <span class="logo-icon">🎓</span>
+        <span class="logo-text">Student<strong>Helper</strong></span>
+      </a>
+      <nav class="nav-links">
+        <a href="./index.html#study-tools">Study</a>
+        <a href="./index.html#ai-tools">AI</a>
+        <a href="./index.html#productivity">Productivity</a>
+        <a href="./index.html#note-taking">Notes</a>
+        <a href="./index.html#coding">Coding</a>
+        <a href="./index.html#design">Design</a>
+        <a href="./index.html#scholarships">Scholarships</a>
+        <a href="./index.html#learning">Learning</a>
+        <a href="./index.html#discounts">Discounts</a>
+        <a href="./index.html#useful">Useful</a>
+      </nav>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="submit-page">
+      <a class="back-link" href="./index.html">← Back to StudentHelper</a>
+
+      <div class="page-header">
+        <h1>✨ Submit a Resource</h1>
+        <p>Know a great free tool for students? Fill out the form below — if approved, it'll appear on the site.</p>
+      </div>
+
+      <div class="submit-card">
+        <form id="submitForm" novalidate>
+
+          <!-- Resource Name -->
+          <div class="form-group">
+            <label for="f-title">Resource Name <span class="req">*</span></label>
+            <input type="text" id="f-title" placeholder="e.g. Notion" maxlength="80" required />
+          </div>
+
+          <!-- URL -->
+          <div class="form-group">
+            <label for="f-url">URL <span class="req">*</span></label>
+            <input type="url" id="f-url" placeholder="https://example.com" required />
+          </div>
+
+          <!-- Description -->
+          <div class="form-group">
+            <label for="f-desc">Short Description <span class="req">*</span></label>
+            <textarea
+              id="f-desc"
+              placeholder="What does it do and why is it useful for students?"
+              maxlength="160"
+              rows="3"
+              required
+            ></textarea>
+            <span class="char-count" id="descCount">0 / 160</span>
+          </div>
+
+          <!-- Category + Tag row -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="f-category">Category <span class="req">*</span></label>
+              <select id="f-category" required>
+                <option value="">Select a category</option>
+                <option value="study-tools"   data-icon="📚">📚 Study Tools</option>
+                <option value="ai-tools"      data-icon="🤖">🤖 AI Tools</option>
+                <option value="productivity"  data-icon="⚡">⚡ Productivity Tools</option>
+                <option value="note-taking"   data-icon="📝">📝 Note-Taking Apps</option>
+                <option value="coding"        data-icon="💻">💻 Coding Resources</option>
+                <option value="design"        data-icon="🎨">🎨 Design Resources</option>
+                <option value="scholarships"  data-icon="🏆">🏆 Scholarship / Internship</option>
+                <option value="learning"      data-icon="🌐">🌐 Free Learning Websites</option>
+                <option value="discounts"     data-icon="💰">💰 Student Discounts</option>
+                <option value="useful"        data-icon="🔗">🔗 Useful Websites</option>
+              </select>
+              <div class="category-preview" id="categoryPreview"></div>
+            </div>
+
+            <div class="form-group">
+              <label for="f-tag">Tag <span class="req">*</span></label>
+              <input type="text" id="f-tag" placeholder="e.g. Free, AI, Notes" maxlength="30" required />
+              <p class="tag-hint">Or pick a suggestion:</p>
+              <div class="tag-suggestions" id="tagSuggestions">
+                <!-- Populated dynamically based on category -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label for="f-email">Your Email <span class="optional">(optional)</span></label>
+            <input type="email" id="f-email" placeholder="we'll notify you when approved" />
+          </div>
+
+          <div id="formError" class="form-error hidden"></div>
+
+          <button type="submit" class="btn-submit">Submit for Review →</button>
+        </form>
+
+        <!-- Success state -->
+        <div class="form-success hidden" id="formSuccess">
+          <div class="success-icon">🎉</div>
+          <h4>Submission received!</h4>
+          <p>Thanks for contributing. The developer will review your submission and publish it if it's a good fit.</p>
+          <button class="btn-outline" id="submitAnother">Submit another</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>🎓 <strong>StudentHelper</strong> — Made for students, by students. All resources are free or have free tiers.</p>
+    <p class="footer-sub">Questions? <a href="mailto:viradiyakanishq@gmail.com">viradiyakanishq@gmail.com</a></p>
+  </footer>
+
+  <script>
+    // ── Theme toggle ──────────────────────────────────────────────
+    const themeToggle = document.getElementById('themeToggle');
+    const html = document.documentElement;
+    const saved = localStorage.getItem('theme') || 'dark';
+    html.setAttribute('data-theme', saved);
+    themeToggle.textContent = saved === 'dark' ? '🌙' : '☀️';
+
+    themeToggle.addEventListener('click', () => {
+      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      themeToggle.textContent = next === 'dark' ? '🌙' : '☀️';
+    });
+
+    // ── Tag suggestions per category ──────────────────────────────
+    const TAG_MAP = {
+      'study-tools':  ['Flashcards', 'Math', 'Free', 'Science', 'Reference'],
+      'ai-tools':     ['AI Chat', 'Writing', 'Research', 'Notes', 'Summarizer'],
+      'productivity': ['Tasks', 'Focus', 'Schedule', 'Projects', 'Workspace'],
+      'note-taking':  ['Markdown', 'Quick Notes', 'Free', 'Flashcards', 'Open Source'],
+      'coding':       ['Free', 'Interviews', 'IDE', 'Courses', 'Open Source'],
+      'design':       ['Free', 'UI/UX', 'Photos', 'Icons', 'Colors', 'Fonts'],
+      'scholarships': ['Scholarships', 'Internships', 'Career', 'Funding'],
+      'learning':     ['Courses', 'Video', 'Free', 'University', 'Coding'],
+      'discounts':    ['Free', 'Dev Tools', 'Music', 'Hardware', 'Shopping'],
+      'useful':       ['Reference', 'Research', 'Citations', 'PDF', 'Translation'],
+    };
+
+    const CATEGORY_LABELS = {
+      'study-tools':  '📚 Study Tools',
+      'ai-tools':     '🤖 AI Tools',
+      'productivity': '⚡ Productivity Tools',
+      'note-taking':  '📝 Note-Taking Apps',
+      'coding':       '💻 Coding Resources',
+      'design':       '🎨 Design Resources',
+      'scholarships': '🏆 Scholarship / Internship',
+      'learning':     '🌐 Free Learning Websites',
+      'discounts':    '💰 Student Discounts',
+      'useful':       '🔗 Useful Websites',
+    };
+
+    const categorySelect   = document.getElementById('f-category');
+    const tagInput         = document.getElementById('f-tag');
+    const tagSuggestions   = document.getElementById('tagSuggestions');
+    const categoryPreview  = document.getElementById('categoryPreview');
+
+    function renderTagSuggestions(category) {
+      tagSuggestions.innerHTML = '';
+      const tags = TAG_MAP[category] || [];
+      tags.forEach(tag => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'tag-suggestion';
+        btn.textContent = tag;
+        btn.addEventListener('click', () => { tagInput.value = tag; });
+        tagSuggestions.appendChild(btn);
+      });
+    }
+
+    function renderCategoryPreview(category) {
+      if (category && CATEGORY_LABELS[category]) {
+        categoryPreview.innerHTML = `Will appear in: <span>${CATEGORY_LABELS[category]}</span>`;
+      } else {
+        categoryPreview.innerHTML = '';
+      }
+    }
+
+    categorySelect.addEventListener('change', () => {
+      const val = categorySelect.value;
+      renderTagSuggestions(val);
+      renderCategoryPreview(val);
+    });
+
+    // ── Char counter ──────────────────────────────────────────────
+    const descTextarea = document.getElementById('f-desc');
+    const descCount    = document.getElementById('descCount');
+    descTextarea.addEventListener('input', () => {
+      descCount.textContent = `${descTextarea.value.length} / 160`;
+    });
+
+    // ── Form submission ───────────────────────────────────────────
+    const form        = document.getElementById('submitForm');
+    const formError   = document.getElementById('formError');
+    const formSuccess = document.getElementById('formSuccess');
+    const submitAnother = document.getElementById('submitAnother');
+
+    function showError(msg) {
+      formError.textContent = msg;
+      formError.classList.remove('hidden');
+    }
+    function hideError() {
+      formError.classList.add('hidden');
+    }
+
+    function isValidUrl(str) {
+      try { return ['http:', 'https:'].includes(new URL(str).protocol); }
+      catch { return false; }
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      hideError();
+
+      const title    = document.getElementById('f-title').value.trim();
+      const url      = document.getElementById('f-url').value.trim();
+      const desc     = descTextarea.value.trim();
+      const category = categorySelect.value;
+      const tag      = tagInput.value.trim();
+
+      if (!title)            return showError('Please enter a resource name.');
+      if (!url)              return showError('Please enter a URL.');
+      if (!isValidUrl(url))  return showError('Please enter a valid URL starting with https://');
+      if (!desc)             return showError('Please add a short description.');
+      if (!category)         return showError('Please select a category.');
+      if (!tag)              return showError('Please add a tag.');
+
+      // Save to localStorage (pending review)
+      const submissions = JSON.parse(localStorage.getItem('submissions') || '[]');
+      submissions.push({
+        id: Date.now(),
+        title, url, desc,
+        category,
+        categoryLabel: CATEGORY_LABELS[category] || category,
+        tag,
+        email: document.getElementById('f-email').value.trim(),
+        status: 'pending',
+        submittedAt: new Date().toISOString(),
+      });
+      localStorage.setItem('submissions', JSON.stringify(submissions));
+
+      form.classList.add('hidden');
+      formSuccess.classList.remove('hidden');
+    });
+
+    submitAnother.addEventListener('click', () => {
+      form.reset();
+      descCount.textContent = '0 / 160';
+      tagSuggestions.innerHTML = '';
+      categoryPreview.innerHTML = '';
+      hideError();
+      formSuccess.classList.add('hidden');
+      form.classList.remove('hidden');
+    });
+  </script>
+</body>
+
+</html>
