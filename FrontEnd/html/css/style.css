@@ -409,6 +409,26 @@ main {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+.card-logo {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  border-radius: 10px;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  position: relative;
+  z-index: 1;
+}
+
+[data-theme="light"] .card-logo {
+  background: rgba(255, 255, 255, 0.96);
+}
+
+[data-theme="dark"] .card-logo {
+  background: rgba(255, 255, 255, 0.92);
+}
+
 .card::before {
   content: '';
   position: absolute;
