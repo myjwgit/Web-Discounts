@@ -63,6 +63,32 @@
   </section>
 
   <main id="main">
+    <section class="assistant-section" id="assistant">
+      <div class="assistant-shell">
+        <div class="assistant-copy">
+          <span class="assistant-eyebrow">AI Assistant</span>
+          <h2>Tell me what you need</h2>
+          <p>Ask for discounts, study tools, coding platforms, or free apps and the assistant will suggest the best matches already listed on this site.</p>
+          <div class="assistant-prompts" aria-label="Suggested prompts">
+            <button class="assistant-chip" type="button" data-chat-prompt="Find me the best AI tools for writing essays">AI tools for essays</button>
+            <button class="assistant-chip" type="button" data-chat-prompt="Show me coding resources for interview prep">Coding interview prep</button>
+            <button class="assistant-chip" type="button" data-chat-prompt="What student discounts should I check first?">Best student discounts</button>
+          </div>
+        </div>
+        <div class="assistant-panel">
+          <div class="assistant-messages" id="assistantMessages" aria-live="polite">
+            <article class="assistant-message bot">
+              <p>Ask something like “find free note-taking apps” or “best discounts for food and travel.”</p>
+            </article>
+          </div>
+          <form class="assistant-form" id="assistantForm">
+            <label class="sr-only" for="assistantInput">Ask the StudentHelper assistant</label>
+            <input type="text" id="assistantInput" placeholder="Ask the assistant..." autocomplete="off" />
+            <button type="submit" class="assistant-send">Ask</button>
+          </form>
+        </div>
+      </div>
+    </section>
 
     <!-- STUDY TOOLS -->
     <section class="category" id="study-tools">

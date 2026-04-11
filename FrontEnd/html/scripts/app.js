@@ -112,6 +112,123 @@ searchInput.addEventListener('focus', () => {
     if (searchInput.value.trim()) renderResults(searchInput.value);
 });
 
+// ===== ASSISTANT =====
+const assistantMessages = document.getElementById('assistantMessages');
+const assistantForm = document.getElementById('assistantForm');
+const assistantInput = document.getElementById('assistantInput');
+const assistantPromptButtons = document.querySelectorAll('[data-chat-prompt]');
+
+const assistantFallbacks = [
+    'Try asking for a category, a task, or a type of discount. For example: "free note apps", "coding interview prep", or "food discounts".',
+    'I can recommend tools already on this page. Ask for study help, AI writing tools, coding sites, design resources, or student discounts.',
+];
+
+function scoreCardForQuery(card, query) {
+    const q = query.toLowerCase().trim();
+    if (!q) return 0;
+
+    const haystack = [
+        card.title,
+        card.desc,
+        card.tag,
+        card.category,
+    ].join(' ').toLowerCase();
+
+    const tokens = q.split(/\s+/).filter(Boolean);
+    let score = 0;
+
+    tokens.forEach(token => {
+        if (card.title.toLowerCase().includes(token)) score += 5;
+        if (card.tag.toLowerCase().includes(token)) score += 4;
+        if (card.category.toLowerCase().includes(token)) score += 3;
+        if (card.desc.toLowerCase().includes(token)) score += 2;
+        if (haystack.includes(token)) score += 1;
+    });
+
+    const intentBoosts = [
+        { terms: ['essay', 'write', 'writing', 'grammar'], match: ['Writing', 'AI Tools', 'Notes'] },
+        { terms: ['code', 'coding', 'developer', 'interview'], match: ['Coding', 'AI Tools'] },
+        { terms: ['discount', 'deal', 'save', 'cheap'], match: ['Discounts'] },
+        { terms: ['notes', 'note', 'flashcard', 'study'], match: ['Study', 'Notes'] },
+        { terms: ['design', 'portfolio', 'creative'], match: ['Design'] },
+    ];
+
+    intentBoosts.forEach(({ terms, match }) => {
+        if (terms.some(term => q.includes(term)) && match.some(fragment => card.category.includes(fragment) || card.tag.includes(fragment))) {
+            score += 6;
+        }
+    });
+
+    return score;
+}
+
+function buildAssistantReply(query) {
+    const ranked = allCards
+        .map(card => ({ card, score: scoreCardForQuery(card, query) }))
+        .filter(item => item.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3);
+
+    if (!ranked.length) {
+        return {
+            intro: assistantFallbacks[Math.floor(Math.random() * assistantFallbacks.length)],
+            matches: [],
+        };
+    }
+
+    const lead = query.toLowerCase().includes('discount')
+        ? 'These look like the strongest discount-related picks from the current directory.'
+        : 'These are the closest matches I found from the current StudentHelper list.';
+
+    return {
+        intro: lead,
+        matches: ranked.map(({ card }) => card),
+    };
+}
+
+function appendAssistantMessage(kind, html) {
+    const article = document.createElement('article');
+    article.className = `assistant-message ${kind}`;
+    article.innerHTML = html;
+    assistantMessages.appendChild(article);
+    assistantMessages.scrollTop = assistantMessages.scrollHeight;
+}
+
+function renderAssistantResponse(query) {
+    const trimmed = query.trim();
+    if (!trimmed) return;
+
+    appendAssistantMessage('user', `<p>${escHtml(trimmed)}</p>`);
+
+    const response = buildAssistantReply(trimmed);
+    const recs = response.matches.length
+        ? `<div class="assistant-recommendations">${response.matches.map(card => `
+            <a class="assistant-link" href="${escHtml(card.href)}" target="_blank" rel="noopener">
+              <strong>${escHtml(card.title)}</strong>
+              <span>${escHtml(card.category)} · ${escHtml(card.tag)}</span>
+            </a>
+          `).join('')}</div>`
+        : '';
+
+    appendAssistantMessage('bot', `<p>${escHtml(response.intro)}</p>${recs}`);
+}
+
+assistantForm.addEventListener('submit', e => {
+    e.preventDefault();
+    renderAssistantResponse(assistantInput.value);
+    assistantInput.value = '';
+    assistantInput.focus();
+});
+
+assistantPromptButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        const prompt = button.dataset.chatPrompt || '';
+        assistantInput.value = prompt;
+        renderAssistantResponse(prompt);
+        assistantInput.value = '';
+    });
+});
+
 // ===== SUBMISSION SYSTEM =====
 const ADMIN_PASSWORD_HASH = '8d969eef6ecad3c29a3a873fba8a4f7e04a799735ac974da718d582052d42902'; // SHA-256 of 'studenthelper2024'
 const ADMIN_PASSWORD = '404 team name not found';
