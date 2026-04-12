@@ -21,6 +21,8 @@
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>" />
   <title>Student Helper — The Best Free Resources for Students</title>
+  <meta name="studenthelper-api-base" content="http://127.0.0.1:8080" />
+  <meta name="studenthelper-backend-enabled" content="auto" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -453,6 +455,11 @@
           </div>
           <span class="tag">Playground</span>
         </a>
+        <a class="card" href="https://sqlplayground.app/" target="_blank" rel="noopener noreferrer">
+          <div class="card-title">SQL Playground</div>
+          <div class="card-desc">Practice SQL queries directly in your browser — perfect for database coursework.</div>
+          <span class="tag">SQL</span>
+        </a>
         <a class="card" href="https://flowchart.fun/" target="_blank" rel="noopener noreferrer">
           <div class="card-title">Flowchart.fun</div>
           <div class="card-desc">Generate flowcharts instantly from plain text — useful for visualizing algorithms and
@@ -464,6 +471,12 @@
           <div class="card-desc">Record and share code walkthroughs and debugging sessions with your team or classmates.
           </div>
           <span class="tag">Collaboration</span>
+        </a>
+        <a class="card" href="https://astuto.io/" target="_blank" rel="noopener noreferrer">
+          <div class="card-title">Astuto</div>
+          <div class="card-desc">Open-source feedback and feature request board — useful for managing student project
+            feedback.</div>
+          <span class="tag">Feedback</span>
         </a>
         <a class="card" href="https://checkmate.so/" target="_blank" rel="noopener noreferrer">
           <div class="card-title">Checkmate</div>
@@ -559,6 +572,11 @@
           <div class="card-title">Internshala</div>
           <div class="card-desc">India's largest internship and training platform for students.</div>
           <span class="tag">Internships</span>
+        </a>
+        <a class="card" href="https://www.chegg.com/scholarships" target="_blank" rel="noopener noreferrer">
+          <div class="card-title">Chegg Scholarships</div>
+          <div class="card-desc">Personalized scholarship matches based on your background.</div>
+          <span class="tag">Scholarships</span>
         </a>
         <a class="card" href="https://www.handshake.com" target="_blank" rel="noopener noreferrer">
           <div class="card-title">Handshake</div>
@@ -679,6 +697,16 @@
           <div class="card-desc">Free Notion Plus plan for students with a valid .edu email.</div>
           <span class="tag">Free</span>
         </a>
+        <a class="card" href="https://www.amazon.com/prime/student" target="_blank" rel="noopener noreferrer">
+          <div class="card-title">Amazon Prime Student</div>
+          <div class="card-desc">6-month free trial then 50% off Prime for students.</div>
+          <span class="tag">Shopping</span>
+        </a>
+        <a class="card" href="https://www.unidays.com" target="_blank" rel="noopener noreferrer">
+          <div class="card-title">UNiDAYS</div>
+          <div class="card-desc">Hundreds of student discounts on fashion, tech, food, and more.</div>
+          <span class="tag">All Categories</span>
+        </a>
         <a class="card" href="https://www.adobe.com/creativecloud/buy/students.html" target="_blank" rel="noopener noreferrer">
           <div class="card-title">Adobe Creative Cloud</div>
           <div class="card-desc">60% off Adobe Creative Cloud suite with valid student ID.</div>
@@ -688,6 +716,11 @@
           <div class="card-title">JetBrains All Products Pack</div>
           <div class="card-desc">Free professional IDEs and tools for students with a .edu email.</div>
           <span class="tag">Dev Tools</span>
+        </a>
+        <a class="card" href="https://www.headspace.com/work/students" target="_blank" rel="noopener noreferrer">
+          <div class="card-title">Headspace for Students</div>
+          <div class="card-desc">Free Headspace meditation and mindfulness app for students.</div>
+          <span class="tag">Wellness</span>
         </a>
         <a class="card" href="https://www.autodesk.com/education/free-software/featured" target="_blank" rel="noopener noreferrer">
           <div class="card-title">Autodesk Software</div>
@@ -741,6 +774,11 @@
           <div class="card-title">Internet Archive</div>
           <div class="card-desc">Access millions of free books, movies, music, and websites.</div>
           <span class="tag">Free Books</span>
+        </a>
+        <a class="card" href="https://www.amazon.com/useful-gifts-college-students/" target="_blank" rel="noopener noreferrer">
+          <div class="card-title">Amazon College Essentials</div>
+          <div class="card-desc">Curated list of useful gifts and must-have items for college students on Amazon.</div>
+          <span class="tag">Shopping</span>
         </a>
         <a class="card" href="https://www.bestcolleges.com/blog/college-supply-checklist/" target="_blank"
           rel="noopener noreferrer">
@@ -940,24 +978,8 @@
 </section>
 
 <script src="scripts/app.js"></script>
-<script>
-  // Auto-inject favicons into every card title
-  document.querySelectorAll('.card').forEach(card => {
-    const titleEl = card.querySelector('.card-title');
-    if (!titleEl || titleEl.querySelector('.card-favicon')) return;
-    try {
-      const url = new URL(card.href);
-      const favicon = document.createElement('img');
-      favicon.className = 'card-favicon';
-      favicon.src = `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=64`;
-      favicon.alt = '';
-      favicon.loading = 'lazy';
-      favicon.onerror = function() { this.style.display = 'none'; };
-      titleEl.insertBefore(favicon, titleEl.firstChild);
-    } catch(e) {}
-  });
-</script>
 </body>
 
 </html>
+
 

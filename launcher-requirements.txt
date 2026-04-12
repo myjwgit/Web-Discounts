@@ -1,0 +1,2 @@
+# Uses only Python standard library today.
+# Keep this file so the uv-managed launcher environment has an explicit dependency surface.

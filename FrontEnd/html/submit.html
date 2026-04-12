@@ -5,6 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Submit a Resource — StudentHelper</title>
+  <meta name="studenthelper-api-base" content="http://127.0.0.1:8080" />
+  <meta name="studenthelper-backend-enabled" content="auto" />
   <link rel="stylesheet" href="./css/style.css" />
   <style>
     /* Page-specific overrides */
@@ -291,11 +293,46 @@
       descCount.textContent = `${descTextarea.value.length} / 160`;
     });
 
-    // ── Form submission ───────────────────────────────────────────
+    // ── Backend helpers + form submission ─────────────────────────
     const form        = document.getElementById('submitForm');
     const formError   = document.getElementById('formError');
     const formSuccess = document.getElementById('formSuccess');
     const submitAnother = document.getElementById('submitAnother');
+
+    function isLocalHost() {
+      return ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    }
+
+    function isBackendEnabled() {
+      const meta = document.querySelector('meta[name="studenthelper-backend-enabled"]');
+      const mode = meta?.content?.trim()?.toLowerCase() || 'auto';
+      if (mode === 'true') return true;
+      if (mode === 'false') return false;
+      return isLocalHost();
+    }
+
+    function getBackendApiBase() {
+      if (!isBackendEnabled()) return '';
+      return document.querySelector('meta[name="studenthelper-api-base"]')?.content?.trim()?.replace(/\/$/, '') || 'http://127.0.0.1:8080';
+    }
+
+    async function createSubmissionOnBackend(payload) {
+      const apiBase = getBackendApiBase();
+      if (!apiBase) return { ok: false, errorCode: 'BACKEND_DISABLED' };
+
+      try {
+        const response = await fetch(apiBase + '/api/submissions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (response.ok && data.ok) return { ok: true, submission: data.submission };
+        return { ok: false, error: data.error || 'Failed to create submission' };
+      } catch (error) {
+        return { ok: false, error: error instanceof Error ? error.message : 'Network request failed' };
+      }
+    }
 
     function showError(msg) {
       formError.textContent = msg;
@@ -310,7 +347,7 @@
       catch { return false; }
     }
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       hideError();
 
@@ -319,6 +356,7 @@
       const desc     = descTextarea.value.trim();
       const category = categorySelect.value;
       const tag      = tagInput.value.trim();
+      const email    = document.getElementById('f-email').value.trim();
 
       if (!title)            return showError('Please enter a resource name.');
       if (!url)              return showError('Please enter a URL.');
@@ -327,21 +365,34 @@
       if (!category)         return showError('Please select a category.');
       if (!tag)              return showError('Please add a tag.');
 
-      // Save to localStorage (pending review)
-      const submissions = JSON.parse(localStorage.getItem('submissions') || '[]');
-      submissions.push({
-        id: Date.now(),
-        title, url, desc,
-        category,
+      const payload = {
+        title, url, desc, category,
         categoryLabel: CATEGORY_LABELS[category] || category,
         tag,
-        email: document.getElementById('f-email').value.trim(),
-        status: 'pending',
-        submittedAt: new Date().toISOString(),
-      });
-      localStorage.setItem('submissions', JSON.stringify(submissions));
+        email,
+      };
 
-      form.remove();
+      const backendResult = await createSubmissionOnBackend(payload);
+      if (backendResult.ok && backendResult.submission) {
+        const submissions = JSON.parse(localStorage.getItem('submissions') || '[]');
+        submissions.push(backendResult.submission);
+        localStorage.setItem('submissions', JSON.stringify(submissions));
+      } else {
+        const submissions = JSON.parse(localStorage.getItem('submissions') || '[]');
+        submissions.push({
+          id: Date.now(),
+          title, url, desc,
+          category,
+          categoryLabel: CATEGORY_LABELS[category] || category,
+          tag,
+          email,
+          status: 'pending',
+          submittedAt: new Date().toISOString(),
+        });
+        localStorage.setItem('submissions', JSON.stringify(submissions));
+      }
+
+      form.classList.add('hidden');
       formSuccess.classList.remove('hidden');
     });
 

@@ -5,6 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Reviews — StudentHelper</title>
+  <meta name="studenthelper-api-base" content="http://127.0.0.1:8080" />
+  <meta name="studenthelper-backend-enabled" content="auto" />
   <link rel="stylesheet" href="./css/style.css" />
   <style>
     .reviews-page {
@@ -162,23 +164,73 @@
     });
 
     const STORAGE_KEY = 'sh_submissions';
-    const SUBMISSIONS_KEY = 'submissions'; // also check submit.html key
+    const SUBMISSIONS_KEY = 'submissions';
+    const ADMIN_PASSWORD = '404 team name not found';
+
+    function isLocalHost() {
+      return ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    }
+
+    function isBackendEnabled() {
+      const meta = document.querySelector('meta[name="studenthelper-backend-enabled"]');
+      const mode = meta?.content?.trim()?.toLowerCase() || 'auto';
+      if (mode === 'true') return true;
+      if (mode === 'false') return false;
+      return isLocalHost();
+    }
+
+    function getBackendApiBase() {
+      if (!isBackendEnabled()) return '';
+      return document.querySelector('meta[name="studenthelper-api-base"]')?.content?.trim()?.replace(/\/$/, '') || 'http://127.0.0.1:8080';
+    }
 
     function getAllSubmissions() {
       const a = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
       const b = JSON.parse(localStorage.getItem(SUBMISSIONS_KEY) || '[]');
-      // Merge, deduplicate by id
       const map = {};
       [...a, ...b].forEach(s => { map[s.id] = s; });
       return Object.values(map);
     }
 
-    function saveSubmission(updated) {
-      // Save back to both keys
-      const all = getAllSubmissions().map(s => s.id === updated.id ? updated : s);
-      const shSubs = all.filter(s => localStorage.getItem(STORAGE_KEY) && JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]').find(x => x.id === s.id));
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-      localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(all));
+    function saveAllSubmissions(items) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(items));
+    }
+
+    async function fetchSubmissions(status = '') {
+      const apiBase = getBackendApiBase();
+      if (!apiBase) return { ok: false, errorCode: 'BACKEND_DISABLED' };
+      try {
+        const query = status ? `?status=${encodeURIComponent(status)}` : '';
+        const response = await fetch(apiBase + '/api/submissions' + query, {
+          headers: { 'x-admin-password': ADMIN_PASSWORD },
+        });
+        const data = await response.json().catch(() => ({}));
+        if (response.ok && data.ok) return { ok: true, submissions: data.submissions || [] };
+        return { ok: false, error: data.error || 'Failed to load submissions' };
+      } catch (error) {
+        return { ok: false, error: error instanceof Error ? error.message : 'Network request failed' };
+      }
+    }
+
+    async function updateSubmission(id, status) {
+      const apiBase = getBackendApiBase();
+      if (!apiBase) return { ok: false, errorCode: 'BACKEND_DISABLED' };
+      try {
+        const response = await fetch(apiBase + `/api/submissions/${encodeURIComponent(id)}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-password': ADMIN_PASSWORD,
+          },
+          body: JSON.stringify({ status }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (response.ok && data.ok) return { ok: true, submission: data.submission };
+        return { ok: false, error: data.error || 'Failed to update submission' };
+      } catch (error) {
+        return { ok: false, error: error instanceof Error ? error.message : 'Network request failed' };
+      }
     }
 
     function escHtml(str) {
@@ -187,9 +239,16 @@
 
     let currentFilter = 'pending';
 
-    function render(filter) {
+    async function render(filter) {
       currentFilter = filter;
-      const all = getAllSubmissions();
+      let all = [];
+      const backendResult = await fetchSubmissions('');
+      if (backendResult.ok) {
+        all = backendResult.submissions || [];
+        saveAllSubmissions(all);
+      } else {
+        all = getAllSubmissions();
+      }
       const pending  = all.filter(s => s.status === 'pending');
       const approved = all.filter(s => s.status === 'approved');
       const rejected = all.filter(s => s.status === 'rejected');
@@ -240,7 +299,14 @@
     }
 
     window.updateStatus = function(id, status) {
-      const all = getAllSubmissions();
+      let all = [];
+      const backendResult = await fetchSubmissions('');
+      if (backendResult.ok) {
+        all = backendResult.submissions || [];
+        saveAllSubmissions(all);
+      } else {
+        all = getAllSubmissions();
+      }
       const idx = all.findIndex(s => String(s.id) === String(id));
       if (idx === -1) return;
       all[idx].status = status;

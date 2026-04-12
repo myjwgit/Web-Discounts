@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 name: Backend Docker Build
 
 on:
@@ -24,3 +25,31 @@ jobs:
           context: ./backend
           push: false
           tags: studenthelper-backend:latest
+=======
+name: Backend Docker Build
+
+on:
+  push:
+    branches: [main, twochatbot]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-docker.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: false
+          tags: studenthelper-backend:latest
+>>>>>>> 2d38747 (fix deplyment)

@@ -1,0 +1,13 @@
+.playwright-cli/ 
+.recovery/ 
+.venv-launcher/ 
+.vscode/ 
+__pycache__/ 
+*.py[cod] 
+ 
+backend/node_modules/ 
+backend/.env 
+backend/.env.codex-backup 
+backend/data/ 
+ 
+*.log
