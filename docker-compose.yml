@@ -8,7 +8,17 @@ services:
     env_file:
       - ./backend/.env
     environment:
+      PORT: ${PORT:-8080}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://127.0.0.1:4173}
       DB_PROVIDER: ${DB_PROVIDER:-sqlite}
       DATABASE_URL: ${DATABASE_URL:-}
       DB_SSL_MODE: ${DB_SSL_MODE:-require}
+      LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_GEMINI_CURL: ${LLM_GEMINI_CURL:-}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://generativelanguage.googleapis.com/v1beta}
+      LLM_MODEL: ${LLM_MODEL:-gemini-2.0-flash}
+      LLM_TEMPERATURE: ${LLM_TEMPERATURE:-0.2}
+      LLM_SYSTEM_PROMPT: ${LLM_SYSTEM_PROMPT:-You are StudentHelper backend assistant.}
+      ADMIN_REVIEW_PASSWORD: ${ADMIN_REVIEW_PASSWORD:-404 team name not found}
     restart: unless-stopped
