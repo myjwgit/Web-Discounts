@@ -2,7 +2,7 @@ name: Test and Deploy Frontend
 
 on:
   push:
-    branches: [main]
+    branches: [main,twochatbot]
   pull_request:
     branches: [main]
   workflow_dispatch:
