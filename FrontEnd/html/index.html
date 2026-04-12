@@ -78,7 +78,7 @@
         <div class="assistant-panel">
           <div class="assistant-messages" id="assistantMessages" aria-live="polite">
             <article class="assistant-message bot">
-              <p>Ask something like “find free note-taking apps” or “best discounts for food and travel.”</p>
+              <p>Ask something like "find free note-taking apps" or "best discounts for food and travel."</p>
             </article>
           </div>
           <form class="assistant-form" id="assistantForm">
@@ -89,7 +89,6 @@
         </div>
       </div>
     </section>
-
     <!-- STUDY TOOLS -->
     <section class="category" id="study-tools">
       <h2><span class="cat-icon">📚</span> Study Tools</h2>
@@ -949,7 +948,35 @@
     </div>
   </div>
 
-  <script src="scripts/app.js"></script>
+  <button class="chatbot-trigger" id="chatbotTrigger" type="button" aria-label="Open navigation assistant">
+  <span class="chatbot-trigger-icon">💬</span>
+  <span class="chatbot-trigger-text">Ask Navigator</span>
+</button>
+
+<section class="chatbot-panel hidden" id="chatbotPanel" aria-label="Navigation assistant">
+  <div class="chatbot-header">
+    <div>
+      <p class="chatbot-eyebrow">AI Navigation</p>
+      <h3>StudentHelper Navigator</h3>
+    </div>
+    <button class="chatbot-close" id="chatbotClose" type="button" aria-label="Close navigation assistant">✕</button>
+  </div>
+  <p class="chatbot-subtitle">Ask things like "take me to discounts", "show AI tools", or "open submit page".</p>
+  <div class="chatbot-messages" id="chatbotMessages"></div>
+  <form class="chatbot-form" id="chatbotForm">
+    <input type="text" id="chatbotInput" placeholder="Where do you want to go?" autocomplete="off" />
+    <button type="submit" class="chatbot-send">Go</button>
+  </form>
+  <div class="chatbot-suggestions">
+    <button type="button" class="chatbot-chip" data-chatbot-prompt="Take me to discounts">Discounts</button>
+    <button type="button" class="chatbot-chip" data-chatbot-prompt="Show AI tools">AI Tools</button>
+    <button type="button" class="chatbot-chip" data-chatbot-prompt="Open scholarships">Scholarships</button>
+    <button type="button" class="chatbot-chip" data-chatbot-prompt="Open submit page">Submit</button>
+  </div>
+</section>
+
+<script src="scripts/app.js"></script>
 </body>
 
 </html>
+

@@ -14,39 +14,6 @@ themeToggle.addEventListener('click', () => {
     themeToggle.textContent = next === 'dark' ? '🌙' : '☀️';
 });
 
-function buildFaviconUrl(href) {
-    try {
-        const { hostname } = new URL(href);
-        return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=64`;
-    } catch {
-        return '';
-    }
-}
-
-function attachCardLogos(root = document) {
-    root.querySelectorAll('.card[href]').forEach(card => {
-        if (card.querySelector('.card-logo')) return;
-
-        const logoUrl = buildFaviconUrl(card.href);
-        if (!logoUrl) return;
-
-        const title = card.querySelector('.card-title')?.textContent?.trim() || 'Website';
-        const img = document.createElement('img');
-        img.className = 'card-logo';
-        img.src = logoUrl;
-        img.alt = `${title} logo`;
-        img.loading = 'lazy';
-        img.decoding = 'async';
-        img.referrerPolicy = 'no-referrer';
-        img.width = 42;
-        img.height = 42;
-
-        card.insertBefore(img, card.firstChild);
-    });
-}
-
-attachCardLogos();
-
 // ===== SEARCH =====
 const searchInput = document.getElementById('searchInput');
 const searchResults = document.getElementById('searchResults');
@@ -127,13 +94,7 @@ function scoreCardForQuery(card, query) {
     const q = query.toLowerCase().trim();
     if (!q) return 0;
 
-    const haystack = [
-        card.title,
-        card.desc,
-        card.tag,
-        card.category,
-    ].join(' ').toLowerCase();
-
+    const haystack = [card.title, card.desc, card.tag, card.category].join(' ').toLowerCase();
     const tokens = q.split(/\s+/).filter(Boolean);
     let score = 0;
 
@@ -213,22 +174,23 @@ function renderAssistantResponse(query) {
     appendAssistantMessage('bot', `<p>${escHtml(response.intro)}</p>${recs}`);
 }
 
-assistantForm.addEventListener('submit', e => {
-    e.preventDefault();
-    renderAssistantResponse(assistantInput.value);
-    assistantInput.value = '';
-    assistantInput.focus();
-});
-
-assistantPromptButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        const prompt = button.dataset.chatPrompt || '';
-        assistantInput.value = prompt;
-        renderAssistantResponse(prompt);
+if (assistantMessages && assistantForm && assistantInput) {
+    assistantForm.addEventListener('submit', e => {
+        e.preventDefault();
+        renderAssistantResponse(assistantInput.value);
         assistantInput.value = '';
+        assistantInput.focus();
     });
-});
 
+    assistantPromptButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const prompt = button.dataset.chatPrompt || '';
+            assistantInput.value = prompt;
+            renderAssistantResponse(prompt);
+            assistantInput.value = '';
+        });
+    });
+}
 // ===== SUBMISSION SYSTEM =====
 const ADMIN_PASSWORD_HASH = '8d969eef6ecad3c29a3a873fba8a4f7e04a799735ac974da718d582052d42902'; // SHA-256 of 'studenthelper2024'
 const ADMIN_PASSWORD = '404 team name not found';
@@ -482,8 +444,6 @@ function renderApprovedCommunityCards() {
     `;
         grid.appendChild(a);
     });
-
-    attachCardLogos();
 }
 
 // Run on load
@@ -519,6 +479,128 @@ document.getElementById('reviewsPassword').addEventListener('keydown', e => {
     if (e.key === 'Enter') reviewsLoginBtn.click();
 });
 
+// ===== NAVIGATION CHATBOT =====
+const chatbotTrigger = document.getElementById('chatbotTrigger');
+const chatbotPanel = document.getElementById('chatbotPanel');
+const chatbotClose = document.getElementById('chatbotClose');
+const chatbotMessages = document.getElementById('chatbotMessages');
+const chatbotForm = document.getElementById('chatbotForm');
+const chatbotInput = document.getElementById('chatbotInput');
+const chatbotChips = document.querySelectorAll('[data-chatbot-prompt]');
+
+const chatbotRoutes = [
+    { keywords: ['discount', 'deal', 'save money'], action: () => navigateToSection('discounts', 'Opened the student discounts section.') },
+    { keywords: ['ai', 'artificial intelligence', 'chatgpt'], action: () => navigateToSection('ai-tools', 'Here are the AI tools.') },
+    { keywords: ['study', 'flashcard', 'exam'], action: () => navigateToSection('study-tools', 'Jumped to study tools.') },
+    { keywords: ['productivity', 'focus', 'calendar', 'task'], action: () => navigateToSection('productivity', 'Opened productivity tools.') },
+    { keywords: ['note', 'notes', 'notetaking'], action: () => navigateToSection('note-taking', 'Here are the note-taking apps.') },
+    { keywords: ['coding', 'developer', 'programming'], action: () => navigateToSection('coding', 'Opened coding resources.') },
+    { keywords: ['design', 'figma', 'creative'], action: () => navigateToSection('design', 'Opened design resources.') },
+    { keywords: ['scholarship', 'internship', 'grant'], action: () => navigateToSection('scholarships', 'Opened scholarships and internship resources.') },
+    { keywords: ['learning', 'course', 'tutorial'], action: () => navigateToSection('learning', 'Opened free learning websites.') },
+    { keywords: ['useful', 'website', 'tool'], action: () => navigateToSection('useful', 'Opened useful websites.') },
+    { keywords: ['review', 'reviews'], action: () => openReviewsAccess() },
+    { keywords: ['submit', 'add resource', 'suggest resource'], action: () => openSubmitPage() },
+];
+
+if (chatbotTrigger && chatbotPanel && chatbotMessages && chatbotForm && chatbotInput) {
+    addChatbotMessage('bot', 'Hi. I can help you navigate this site. Ask for a section, or say something like "search for design".');
+
+    chatbotTrigger.addEventListener('click', () => {
+        chatbotPanel.classList.remove('hidden');
+        chatbotInput.focus();
+    });
+
+    chatbotClose.addEventListener('click', () => chatbotPanel.classList.add('hidden'));
+
+    chatbotForm.addEventListener('submit', event => {
+        event.preventDefault();
+        const prompt = chatbotInput.value.trim();
+        if (!prompt) return;
+        chatbotInput.value = '';
+        handleChatbotPrompt(prompt);
+    });
+
+    chatbotChips.forEach(chip => {
+        chip.addEventListener('click', () => handleChatbotPrompt(chip.dataset.chatbotPrompt || ''));
+    });
+}
+
+function handleChatbotPrompt(prompt) {
+    const normalized = normalizeChatbotText(prompt);
+    addChatbotMessage('user', escHtml(prompt));
+
+    if (!normalized) {
+        addChatbotMessage('bot', 'Try asking for discounts, AI tools, scholarships, submit page, or a search topic.');
+        return;
+    }
+
+    if (normalized.startsWith('search ') || normalized.startsWith('find ')) {
+        const query = prompt.replace(/^(search|find)\s+/i, '').trim();
+        if (query) {
+            searchInput.value = query;
+            renderResults(query);
+            searchInput.focus();
+            addChatbotMessage('bot', `I searched for <strong>${escHtml(query)}</strong> in the resource index.`);
+            return;
+        }
+    }
+
+    const matchedRoute = chatbotRoutes.find(route => route.keywords.some(keyword => normalized.includes(keyword)));
+    if (matchedRoute) {
+        matchedRoute.action();
+        return;
+    }
+
+    const fallbackTerm = ['scholarship', 'discount', 'design', 'coding', 'note', 'study', 'productivity', 'ai']
+        .find(term => normalized.includes(term));
+
+    if (fallbackTerm) {
+        searchInput.value = fallbackTerm;
+        renderResults(fallbackTerm);
+        searchInput.focus();
+        addChatbotMessage('bot', `I could not map that to one page, so I searched for <strong>${escHtml(fallbackTerm)}</strong> instead.`);
+        return;
+    }
+
+    addChatbotMessage('bot', 'I can navigate to discounts, AI tools, study tools, scholarships, useful websites, reviews, or the submit page. You can also say "search for notebooks".');
+}
+
+function navigateToSection(sectionId, reply) {
+    const target = document.getElementById(sectionId);
+    if (!target) {
+        addChatbotMessage('bot', 'That section is not available on this page.');
+        return;
+    }
+
+    chatbotPanel.classList.remove('hidden');
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    addChatbotMessage('bot', `${escHtml(reply)} <a class="chatbot-link" href="#${escHtml(sectionId)}">Open section</a>`);
+}
+
+function openSubmitPage() {
+    addChatbotMessage('bot', 'Opening the submit page. <a class="chatbot-link" href="submit.html">Open submit</a>');
+    window.location.href = 'submit.html';
+}
+
+function openReviewsAccess() {
+    reviewsOverlay.classList.remove('hidden');
+    document.getElementById('reviewsPassword').value = '';
+    document.getElementById('reviewsLoginError').classList.add('hidden');
+    addChatbotMessage('bot', 'Opened the reviews access dialog. Enter the password to continue.');
+}
+
+function addChatbotMessage(role, content) {
+    const bubble = document.createElement('div');
+    bubble.className = `chatbot-bubble ${role}`;
+    bubble.innerHTML = content;
+    chatbotMessages.appendChild(bubble);
+    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+}
+
+function normalizeChatbotText(value) {
+    return value.toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').replace(/\s+/g, ' ').trim();
+}
 // ---- Secret admin access: type "admin" anywhere ----
 let adminKeyBuffer = '';
 document.addEventListener('keydown', e => {
@@ -534,3 +616,5 @@ document.addEventListener('keydown', e => {
         adminKeyBuffer = '';
     }
 });
+
+
