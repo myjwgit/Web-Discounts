@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 name: Branch Test and Deploy Pages
 
 on:
@@ -147,3 +148,154 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+=======
+name: Branch Test and Deploy Pages
+
+on:
+  push:
+    branches:
+      - main
+      - twochatbot
+      - pages-test
+      - 'preview/**'
+      - 'demo/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FRONTEND_DIR: FrontEnd/html
+  FRONTEND_API_BASE: ${{ vars.FRONTEND_API_BASE }}
+  FRONTEND_BACKEND_ENABLED: ${{ vars.FRONTEND_BACKEND_ENABLED }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify static files exist
+        run: |
+          test -f "$FRONTEND_DIR/index.html"
+          test -f "$FRONTEND_DIR/css/style.css"
+          test -f "$FRONTEND_DIR/scripts/app.js"
+
+      - name: Inject deployment config into index.html
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          import re
+
+          index_path = Path(os.environ['FRONTEND_DIR']) / 'index.html'
+          html = index_path.read_text(encoding='utf-8')
+
+          api_base = os.environ.get('FRONTEND_API_BASE', '').strip()
+          backend_enabled = os.environ.get('FRONTEND_BACKEND_ENABLED', '').strip()
+
+          if api_base:
+              html = re.sub(
+                  r'(<meta name="studenthelper-api-base" content=")([^"]*)(" ?/>)',
+                  rf'\g<1>{api_base}\g<3>',
+                  html,
+                  count=1,
+              )
+
+          if backend_enabled:
+              html = re.sub(
+                  r'(<meta name="studenthelper-backend-enabled" content=")([^"]*)(" ?/>)',
+                  rf'\g<1>{backend_enabled}\g<3>',
+                  html,
+                  count=1,
+              )
+
+          index_path.write_text(html, encoding='utf-8')
+          PY
+
+      - name: Smoke test frontend markers
+        run: |
+          grep -q 'assistantMessages' "$FRONTEND_DIR/index.html"
+          grep -q 'chatbotTrigger' "$FRONTEND_DIR/index.html"
+          grep -q 'studenthelper-backend-enabled' "$FRONTEND_DIR/index.html"
+          grep -q 'attachCardLogos' "$FRONTEND_DIR/scripts/app.js"
+
+      - name: Start local static server
+        run: |
+          cd "$FRONTEND_DIR"
+          python3 -m http.server 8000 > /tmp/studenthelper-pages.log 2>&1 &
+          echo $! > /tmp/studenthelper-pages.pid
+          sleep 2
+
+      - name: Check homepage response
+        run: |
+          curl -I http://127.0.0.1:8000/index.html
+          curl -s http://127.0.0.1:8000/index.html | grep -q 'StudentHelper'
+          curl -s http://127.0.0.1:8000/index.html | grep -q 'AI Assistant'
+
+      - name: Stop local static server
+        if: always()
+        run: |
+          kill $(cat /tmp/studenthelper-pages.pid) || true
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Inject deployment config into index.html
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          import re
+
+          index_path = Path(os.environ['FRONTEND_DIR']) / 'index.html'
+          html = index_path.read_text(encoding='utf-8')
+
+          api_base = os.environ.get('FRONTEND_API_BASE', '').strip()
+          backend_enabled = os.environ.get('FRONTEND_BACKEND_ENABLED', '').strip()
+
+          if api_base:
+              html = re.sub(
+                  r'(<meta name="studenthelper-api-base" content=")([^"]*)(" ?/>)',
+                  rf'\g<1>{api_base}\g<3>',
+                  html,
+                  count=1,
+              )
+
+          if backend_enabled:
+              html = re.sub(
+                  r'(<meta name="studenthelper-backend-enabled" content=")([^"]*)(" ?/>)',
+                  rf'\g<1>{backend_enabled}\g<3>',
+                  html,
+                  count=1,
+              )
+
+          index_path.write_text(html, encoding='utf-8')
+          PY
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ env.FRONTEND_DIR }}
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+>>>>>>> 2d38747 (fix deplyment)
