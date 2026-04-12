@@ -3,7 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import readline from 'node:readline';
 import { stdin as input, stdout as output } from 'node:process';
-import { promises as fs } from 'node:fs';
+import { promises as fs, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
@@ -14,6 +14,13 @@ dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const backendRootDir = path.resolve(__dirname, '..');
+const repoRootDir = path.resolve(__dirname, '..', '..');
+const bundledFrontendDir = path.join(backendRootDir, 'public');
+const sourceFrontendDir = path.join(repoRootDir, 'FrontEnd', 'html');
+const frontendDir = [bundledFrontendDir, sourceFrontendDir].find(candidate => existsSync(path.join(candidate, 'index.html'))) || '';
+const frontendIndexFile = frontendDir ? path.join(frontendDir, 'index.html') : '';
+const shouldServeFrontend = process.env.SERVE_FRONTEND !== 'false';
 const dataDir = path.resolve(__dirname, '..', 'data');
 const dbFile = path.join(dataDir, 'studenthelper.db');
 const legacyCacheFile = path.join(dataDir, 'recommendation-cache.json');
@@ -1098,14 +1105,29 @@ app.post('/api/recommend', async (req, res) => {
   }
 });
 
+async function registerFrontendRoutes() {
+  if (!shouldServeFrontend || !frontendDir || !frontendIndexFile) {
+    return;
+  }
+
+  app.use(express.static(frontendDir));
+  app.get(/^(?!\/api(?:\/|$)).*/, (_req, res) => {
+    res.sendFile(frontendIndexFile);
+  });
+}
+
 async function startServer() {
   await fs.mkdir(dataDir, { recursive: true });
   await initDatabase();
   await migrateLegacyData();
   await ensureLlmConfigReadyAtStartup();
+  await registerFrontendRoutes();
 
   app.listen(port, () => {
     console.log(`StudentHelper backend listening on http://localhost:${port}`);
+    if (shouldServeFrontend && frontendDir) {
+      console.log(`Serving StudentHelper frontend from ${frontendDir}`);
+    }
     if (!process.env.LLM_API_KEY && !process.env.LLM_GEMINI_CURL && !promptedApiKey && !promptedCurlConfig && isInteractivePromptAllowed()) {
       console.log('No backend LLM config is active. You can restart and enter an API key or Gemini curl command.');
     }
