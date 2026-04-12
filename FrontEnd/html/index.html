@@ -976,6 +976,23 @@
 </section>
 
 <script src="scripts/app.js"></script>
+<script>
+  // Auto-inject favicons into every card title
+  document.querySelectorAll('.card').forEach(card => {
+    const titleEl = card.querySelector('.card-title');
+    if (!titleEl || titleEl.querySelector('.card-favicon')) return;
+    try {
+      const url = new URL(card.href);
+      const favicon = document.createElement('img');
+      favicon.className = 'card-favicon';
+      favicon.src = `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=64`;
+      favicon.alt = '';
+      favicon.loading = 'lazy';
+      favicon.onerror = function() { this.style.display = 'none'; };
+      titleEl.insertBefore(favicon, titleEl.firstChild);
+    } catch(e) {}
+  });
+</script>
 </body>
 
 </html>
