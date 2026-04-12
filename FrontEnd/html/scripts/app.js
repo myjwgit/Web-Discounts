@@ -102,7 +102,16 @@ function getBackendApiBase() {
     if (saved && saved.trim()) return saved.trim().replace(/\/$/, '');
 
     const meta = document.querySelector('meta[name="studenthelper-api-base"]');
-    if (meta && meta.content.trim()) return meta.content.trim().replace(/\/$/, '');
+    const metaBase = meta && meta.content.trim() ? meta.content.trim().replace(/\/$/, '') : '';
+
+    // In combined deployments such as Back4App, default to same-origin unless an explicit remote API base is configured.
+    if (!isLocalHost()) {
+        if (!metaBase || /https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(metaBase)) {
+            return window.location.origin;
+        }
+    }
+
+    if (metaBase) return metaBase;
 
     return 'http://127.0.0.1:8080';
 }

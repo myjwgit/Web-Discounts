@@ -1,0 +1,13 @@
+.git
+.github/workflows/.github - Shortcut.lnk
+.playwright-cli
+.recovery
+.venv-launcher
+.vscode
+__pycache__
+*.py[cod]
+*.log
+backend/node_modules
+backend/data
+backend/.env
+backend/.env.codex-backup

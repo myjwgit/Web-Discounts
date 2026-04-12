@@ -2,11 +2,13 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package.json ./
-RUN npm install
+COPY backend/package.json ./package.json
+COPY backend/package-lock.json ./package-lock.json
+RUN npm ci --omit=dev
 
-COPY src ./src
-COPY .env.example ./.env.example
+COPY backend/src ./src
+COPY backend/.env.example ./.env.example
+COPY FrontEnd/html ./public
 
 EXPOSE 8080
 
