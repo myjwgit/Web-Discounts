@@ -41,7 +41,7 @@ def main() -> None:
     print(f"- Frontend directory: {FRONTEND_DIR}")
     print()
 
-    db_provider = env_values.get("DB_PROVIDER", "sqlite")
+    db_provider = env_values.get("DB_PROVIDER") or ("postgres" if env_values.get("DATABASE_URL") else "sqlite")
     database_url = env_values.get("DATABASE_URL", "")
     llm_provider = env_values.get("LLM_PROVIDER", "gemini")
     llm_api_key = env_values.get("LLM_API_KEY", "")
@@ -77,7 +77,7 @@ def main() -> None:
         print("DATABASE_URL=<your-supabase-postgres-url>")
         print(f"DB_SSL_MODE={env_values.get('DB_SSL_MODE', 'require')}")
     else:
-        print("DATABASE_URL=(leave empty for sqlite)")
+        print("DATABASE_URL=(leave empty only if you intentionally want sqlite)")
         print("DB_SSL_MODE=require")
     print(f"LLM_PROVIDER={llm_provider}")
     print("LLM_API_KEY=<your-gemini-key>")

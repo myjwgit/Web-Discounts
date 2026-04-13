@@ -12,7 +12,7 @@ services:
       PORT: ${PORT:-8080}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://127.0.0.1:4173}
       SERVE_FRONTEND: ${SERVE_FRONTEND:-true}
-      DB_PROVIDER: ${DB_PROVIDER:-sqlite}
+      DB_PROVIDER: ${DB_PROVIDER:-postgres}
       DATABASE_URL: ${DATABASE_URL:-}
       DB_SSL_MODE: ${DB_SSL_MODE:-require}
       LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
