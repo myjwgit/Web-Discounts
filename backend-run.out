@@ -1,0 +1,12 @@
+[startup] StudentHelper backend booting
+[startup] PORT=8080
+[startup] SERVE_FRONTEND=true
+[startup] DB_PROVIDER=postgres
+[startup] DATABASE_URL=set
+[startup] DATABASE_HOST=aws-1-us-west-2.pooler.supabase.com:5432
+[startup] DB_SSL_MODE=require
+[startup] LLM_PROVIDER=gemini
+[startup] LLM_API_KEY=set
+[startup] CORS_ORIGIN=http://127.0.0.1:4173
+StudentHelper backend listening on http://localhost:8080
+Serving StudentHelper frontend from D:\codex\webdiscount\FrontEnd\html

@@ -929,7 +929,7 @@ async function createSubmission(payload) {
   if (getDbProvider() === 'postgres') {
     await pgClient.query(
       `INSERT INTO submissions (
-        id, title, url, desc, category, category_label, tag, email, status, submitted_at, reviewed_at, created_at, updated_at
+        id, title, url, "desc", category, category_label, tag, email, status, submitted_at, reviewed_at, created_at, updated_at
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
       [
         record.id,
@@ -952,7 +952,7 @@ async function createSubmission(payload) {
 
   db.prepare(`
     INSERT INTO submissions (
-      id, title, url, desc, category, category_label, tag, email, status, submitted_at, reviewed_at, created_at, updated_at
+      id, title, url, "desc", category, category_label, tag, email, status, submitted_at, reviewed_at, created_at, updated_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     record.id,
@@ -1244,3 +1244,4 @@ startServer().catch(error => {
   console.error('Failed to start StudentHelper backend:', error);
   process.exit(1);
 });
+

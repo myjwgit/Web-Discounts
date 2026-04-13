@@ -1,0 +1,9 @@
+[startup] Backend failed before listening on the port.
+[startup] Hint: database host could not be resolved. Recheck the database hostname.
+Failed to initialize StudentHelper backend services: Error: getaddrinfo ENOTFOUND aws-1-us-west-2.pooler.supabase.com
+    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:121:26) {
+  errno: -3008,
+  code: 'ENOTFOUND',
+  syscall: 'getaddrinfo',
+  hostname: 'aws-1-us-west-2.pooler.supabase.com'
+}
