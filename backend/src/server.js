@@ -192,6 +192,57 @@ async function publicConfig() {
   };
 }
 
+function printStartupDiagnostics() {
+  const hasDatabaseUrl = Boolean(databaseUrl);
+  const hasLlmKey = Boolean(process.env.LLM_API_KEY || process.env.LLM_GEMINI_CURL || promptedApiKey || promptedCurlConfig);
+
+  console.log('[startup] StudentHelper backend booting');
+  console.log(`[startup] PORT=${port}`);
+  console.log(`[startup] SERVE_FRONTEND=${shouldServeFrontend}`);
+  console.log(`[startup] DB_PROVIDER=${dbProvider}`);
+  console.log(`[startup] DATABASE_URL=${hasDatabaseUrl ? 'set' : 'missing'}`);
+  console.log(`[startup] DB_SSL_MODE=${dbSslMode}`);
+  console.log(`[startup] LLM_PROVIDER=${process.env.LLM_PROVIDER || 'openai-compatible'}`);
+  console.log(`[startup] LLM_API_KEY=${hasLlmKey ? 'set' : 'missing'}`);
+  console.log(`[startup] CORS_ORIGIN=${corsOrigin}`);
+
+  if (dbProvider === 'postgres' && !hasDatabaseUrl) {
+    console.error('[startup] DATABASE_URL is missing while DB_PROVIDER=postgres. The server cannot start.');
+    console.error('[startup] Set DATABASE_URL to your remote SSL Postgres connection string.');
+  }
+
+  if (dbProvider === 'sqlite') {
+    console.warn('[startup] DB_PROVIDER=sqlite. For Back4App deployment, remote Postgres is recommended.');
+  }
+
+  if (!hasLlmKey) {
+    console.warn('[startup] No LLM key is configured at process start. /api/recommend and /api/chat will fail until configured.');
+  }
+}
+
+function printStartupFailureHints(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  const lowered = message.toLowerCase();
+
+  console.error('[startup] Backend failed before listening on the port.');
+
+  if (lowered.includes('database_url') || lowered.includes('connection string')) {
+    console.error('[startup] Hint: check DATABASE_URL formatting and ensure no placeholder like [YOUR-PASSWORD] remains.');
+  }
+  if (lowered.includes('password authentication failed') || lowered.includes('sasl')) {
+    console.error('[startup] Hint: database credentials were rejected. Recheck the Postgres password and username.');
+  }
+  if (lowered.includes('getaddrinfo') || lowered.includes('enotfound')) {
+    console.error('[startup] Hint: database host could not be resolved. Recheck the database hostname.');
+  }
+  if (lowered.includes('node:sqlite') || lowered.includes('experimental-sqlite')) {
+    console.error('[startup] Hint: SQLite runtime support failed. Use remote Postgres for deployment, or recheck the Node image/runtime flags.');
+  }
+  if (lowered.includes('econnrefused') || lowered.includes('connect timeout')) {
+    console.error('[startup] Hint: the database server refused the connection or timed out. Check firewall, SSL mode, and host reachability.');
+  }
+}
+
 function normalizeMessages(messages) {
   return Array.isArray(messages)
     ? messages
@@ -1117,6 +1168,7 @@ async function registerFrontendRoutes() {
 }
 
 async function startServer() {
+  printStartupDiagnostics();
   await fs.mkdir(dataDir, { recursive: true });
   await initDatabase();
   await migrateLegacyData();
@@ -1135,6 +1187,7 @@ async function startServer() {
 }
 
 startServer().catch(error => {
+  printStartupFailureHints(error);
   console.error('Failed to start StudentHelper backend:', error);
   process.exit(1);
 });
