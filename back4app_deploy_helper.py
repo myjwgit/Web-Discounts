@@ -37,6 +37,7 @@ def main() -> None:
     print(f"- Workspace: {ROOT}")
     print(f"- Backend env: {BACKEND_ENV}")
     print(f"- Backend Dockerfile: {BACKEND_DOCKERFILE}")
+    print(f"- Root Dockerfile: {ROOT / 'Dockerfile'}")
     print(f"- Frontend directory: {FRONTEND_DIR}")
     print()
 
@@ -60,8 +61,8 @@ def main() -> None:
     print("Back4App combined deployment steps:")
     print("1. Push this repository to GitHub.")
     print("2. In Back4App Containers, create a new app from the GitHub repository.")
-    print("3. Use the repository root as the build context.")
-    print("4. Point Back4App to backend/Dockerfile.")
+    print("3. If Back4App only gives you a Root directory option, set it to the repository root.")
+    print("4. Use the repository-root Dockerfile for combined frontend+backend deployment.")
     print("5. The container will serve both the Node backend and FrontEnd/html as one web app.")
     print("6. Add the environment variables listed below in the Back4App dashboard.")
     print("7. Deploy, then open /api/health and the root URL to verify both API and frontend.")
