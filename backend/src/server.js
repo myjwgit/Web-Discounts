@@ -39,6 +39,11 @@ let promptedCurlConfig = '';
 let apiKeyPromptPromise = null;
 let db;
 let pgClient;
+const startupState = {
+  initStarted: false,
+  ready: false,
+  initError: '',
+};
 
 app.use(cors({ origin: corsOrigin === '*' ? true : corsOrigin.split(',').map(item => item.trim()) }));
 app.use(express.json({ limit: '1mb' }));
@@ -1006,8 +1011,18 @@ async function ensureLlmConfigReadyAtStartup() {
 }
 
 app.get('/api/health', async (_req, res) => {
+  if (!startupState.ready) {
+    return res.json({
+      ok: false,
+      service: 'studenthelper-backend',
+      startup: { ...startupState },
+      llm: await publicConfig(),
+      data: null,
+    });
+  }
+
   const counts = await getDatabaseCounts();
-  res.json({ ok: true, service: 'studenthelper-backend', llm: await publicConfig(), data: counts });
+  res.json({ ok: true, service: 'studenthelper-backend', startup: { ...startupState }, llm: await publicConfig(), data: counts });
 });
 
 app.get('/api/runtime-config', async (_req, res) => {
@@ -1167,12 +1182,26 @@ async function registerFrontendRoutes() {
   });
 }
 
+async function initializeServices() {
+  startupState.initStarted = true;
+  try {
+    await fs.mkdir(dataDir, { recursive: true });
+    await initDatabase();
+    await migrateLegacyData();
+    await ensureLlmConfigReadyAtStartup();
+    startupState.ready = true;
+    startupState.initError = '';
+    console.log('[startup] Initialization completed successfully.');
+  } catch (error) {
+    startupState.ready = false;
+    startupState.initError = error instanceof Error ? error.message : String(error);
+    printStartupFailureHints(error);
+    console.error('Failed to initialize StudentHelper backend services:', error);
+  }
+}
+
 async function startServer() {
   printStartupDiagnostics();
-  await fs.mkdir(dataDir, { recursive: true });
-  await initDatabase();
-  await migrateLegacyData();
-  await ensureLlmConfigReadyAtStartup();
   await registerFrontendRoutes();
 
   app.listen(port, () => {
@@ -1184,6 +1213,8 @@ async function startServer() {
       console.log('No backend LLM config is active. You can restart and enter an API key or Gemini curl command.');
     }
   });
+
+  void initializeServices();
 }
 
 startServer().catch(error => {

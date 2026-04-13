@@ -1,28 +1,13 @@
 #!/bin/sh
-set -eu
-
 LOG_FILE="/tmp/studenthelper-startup.log"
 : > "$LOG_FILE"
 
 log() {
-  echo "$1" | tee -a "$LOG_FILE"
+  printf "%s
+" "$1"
+  printf "%s
+" "$1" >> "$LOG_FILE"
 }
-
-cleanup() {
-  status=$?
-  if [ -n "${TAIL_PID:-}" ]; then
-    kill "$TAIL_PID" >/dev/null 2>&1 || true
-  fi
-  if [ $status -ne 0 ]; then
-    log "[entrypoint] Process exited with status $status"
-    log "[entrypoint] Startup log saved to $LOG_FILE"
-    log "[entrypoint] Dumping startup log before exit:"
-    cat "$LOG_FILE" || true
-  fi
-  exit $status
-}
-
-trap cleanup EXIT
 
 log "[entrypoint] StudentHelper container starting"
 log "[entrypoint] PORT=${PORT:-8080}"
@@ -55,8 +40,9 @@ if [ "${DB_PROVIDER:-postgres}" = "sqlite" ]; then
 fi
 
 log "[entrypoint] Launching npm start"
-
-tail -F "$LOG_FILE" >/proc/1/fd/1 2>/proc/1/fd/2 &
-TAIL_PID=$!
-
 npm start >> "$LOG_FILE" 2>&1
+status=$?
+log "[entrypoint] Process exited with status $status"
+log "[entrypoint] Dumping startup log before exit:"
+cat "$LOG_FILE" || true
+exit $status
