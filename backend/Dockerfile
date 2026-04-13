@@ -8,8 +8,10 @@ RUN npm ci --omit=dev
 
 COPY backend/src ./src
 COPY backend/.env.example ./.env.example
+COPY backend/start.sh ./start.sh
 COPY FrontEnd/html ./public
 
 EXPOSE 8080
 
-CMD ["npm", "start"]
+RUN chmod +x ./start.sh
+CMD ["./start.sh"]
