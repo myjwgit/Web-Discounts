@@ -26,9 +26,30 @@ const dbFile = path.join(dataDir, 'studenthelper.db');
 const legacyCacheFile = path.join(dataDir, 'recommendation-cache.json');
 const legacyLogsFile = path.join(dataDir, 'query-logs.json');
 const legacyUserMemoryFile = path.join(dataDir, 'user-memory.json');
-const dbProvider = (process.env.DB_PROVIDER || (process.env.DATABASE_URL ? 'postgres' : 'sqlite')).toLowerCase();
-const databaseUrl = process.env.DATABASE_URL || '';
-const dbSslMode = (process.env.DB_SSL_MODE || 'require').toLowerCase();
+function getDatabaseUrl() {
+  return (process.env.DATABASE_URL || '').trim();
+}
+
+function getDbProvider() {
+  return (process.env.DB_PROVIDER || (getDatabaseUrl() ? 'postgres' : 'sqlite')).toLowerCase();
+}
+
+function getDbSslMode() {
+  return (process.env.DB_SSL_MODE || 'require').toLowerCase();
+}
+
+function getDatabaseHost() {
+  const databaseUrl = getDatabaseUrl();
+  if (!databaseUrl) {
+    return 'missing';
+  }
+
+  try {
+    return new URL(databaseUrl).host || 'unknown';
+  } catch {
+    return 'invalid';
+  }
+}
 const adminReviewPassword = process.env.ADMIN_REVIEW_PASSWORD || '404 team name not found';
 
 const app = express();
@@ -188,7 +209,7 @@ async function publicConfig() {
   const config = await getLlmConfig();
   return {
     provider: config.provider,
-    databaseProvider: dbProvider,
+    databaseProvider: getDbProvider(),
     baseUrl: config.baseUrl,
     model: config.model,
     temperature: config.temperature,
@@ -198,25 +219,26 @@ async function publicConfig() {
 }
 
 function printStartupDiagnostics() {
-  const hasDatabaseUrl = Boolean(databaseUrl);
+  const hasDatabaseUrl = Boolean(getDatabaseUrl());
   const hasLlmKey = Boolean(process.env.LLM_API_KEY || process.env.LLM_GEMINI_CURL || promptedApiKey || promptedCurlConfig);
 
   console.log('[startup] StudentHelper backend booting');
   console.log(`[startup] PORT=${port}`);
   console.log(`[startup] SERVE_FRONTEND=${shouldServeFrontend}`);
-  console.log(`[startup] DB_PROVIDER=${dbProvider}`);
+  console.log(`[startup] DB_PROVIDER=${getDbProvider()}`);
   console.log(`[startup] DATABASE_URL=${hasDatabaseUrl ? 'set' : 'missing'}`);
-  console.log(`[startup] DB_SSL_MODE=${dbSslMode}`);
+  console.log(`[startup] DATABASE_HOST=${getDatabaseHost()}`);
+  console.log(`[startup] DB_SSL_MODE=${getDbSslMode()}`);
   console.log(`[startup] LLM_PROVIDER=${process.env.LLM_PROVIDER || 'openai-compatible'}`);
   console.log(`[startup] LLM_API_KEY=${hasLlmKey ? 'set' : 'missing'}`);
   console.log(`[startup] CORS_ORIGIN=${corsOrigin}`);
 
-  if (dbProvider === 'postgres' && !hasDatabaseUrl) {
+  if (getDbProvider() === 'postgres' && !hasDatabaseUrl) {
     console.error('[startup] DATABASE_URL is missing while DB_PROVIDER=postgres. The server cannot start.');
     console.error('[startup] Set DATABASE_URL to your remote SSL Postgres connection string.');
   }
 
-  if (dbProvider === 'sqlite') {
+  if (getDbProvider() === 'sqlite') {
     console.warn('[startup] DB_PROVIDER=sqlite. For Back4App deployment, remote Postgres is recommended.');
   }
 
@@ -375,15 +397,15 @@ function parseJsonArray(value) {
 }
 
 function buildPgSslConfig() {
-  if (!databaseUrl || dbSslMode === 'disable') return false;
+  if (!getDatabaseUrl() || getDbSslMode() === 'disable') return false;
   return { rejectUnauthorized: false };
 }
 
 async function initDatabase() {
-  if (dbProvider === 'postgres') {
+  if (getDbProvider() === 'postgres') {
     const { Client } = pg;
     pgClient = new Client({
-      connectionString: databaseUrl,
+      connectionString: getDatabaseUrl(),
       ssl: buildPgSslConfig(),
     });
     await pgClient.connect();
@@ -512,7 +534,7 @@ async function initDatabase() {
 }
 
 async function getDatabaseCounts() {
-  if (dbProvider === 'postgres') {
+  if (getDbProvider() === 'postgres') {
     const cacheCount = await pgClient.query('SELECT COUNT(*)::int AS count FROM recommendation_cache');
     const logCount = await pgClient.query('SELECT COUNT(*)::int AS count FROM query_logs');
     return {
@@ -534,7 +556,7 @@ async function migrateLegacyData() {
   const legacyLogs = await readLegacyJson(legacyLogsFile, []);
   const legacyUsers = await readLegacyJson(legacyUserMemoryFile, []);
 
-  if (dbProvider === 'postgres') {
+  if (getDbProvider() === 'postgres') {
     const cacheCount = (await pgClient.query('SELECT COUNT(*)::int AS count FROM recommendation_cache')).rows[0]?.count || 0;
     if (cacheCount === 0) {
       for (const item of legacyCache) {
@@ -662,7 +684,7 @@ async function logQuery(entry) {
     new Date().toISOString(),
   ];
 
-  if (dbProvider === 'postgres') {
+  if (getDbProvider() === 'postgres') {
     await pgClient.query(
       'INSERT INTO query_logs (user_key, original_query, normalized_query, intent_type, handled_by, created_at) VALUES ($1, $2, $3, $4, $5, $6)',
       payload,
@@ -679,7 +701,7 @@ async function logQuery(entry) {
 async function getUserMemory(userKey) {
   if (!userKey) return null;
 
-  if (dbProvider === 'postgres') {
+  if (getDbProvider() === 'postgres') {
     const result = await pgClient.query(
       'SELECT user_key, major, budget_preference, favorite_categories, last_active_at FROM user_memory WHERE user_key = $1 LIMIT 1',
       [userKey],
@@ -713,7 +735,7 @@ async function getUserMemory(userKey) {
 async function findCachedRecommendation(query, intentType = 'recommendation') {
   const normalizedQuery = normalizeQuery(query);
 
-  if (dbProvider === 'postgres') {
+  if (getDbProvider() === 'postgres') {
     const exactResult = await pgClient.query(
       'SELECT * FROM recommendation_cache WHERE normalized_query = $1 AND intent_type = $2 LIMIT 1',
       [normalizedQuery, intentType],
@@ -796,7 +818,7 @@ async function storeCachedRecommendation({ query, intentType = 'recommendation',
   const normalizedQuery = normalizeQuery(query);
   const now = new Date().toISOString();
 
-  if (dbProvider === 'postgres') {
+  if (getDbProvider() === 'postgres') {
     const existingResult = await pgClient.query(
       'SELECT id FROM recommendation_cache WHERE normalized_query = $1 AND intent_type = $2 LIMIT 1',
       [normalizedQuery, intentType],
@@ -873,7 +895,7 @@ function requireAdminReviewAccess(req) {
 async function listSubmissions(status = '') {
   const normalizedStatus = String(status || '').trim().toLowerCase();
 
-  if (dbProvider === 'postgres') {
+  if (getDbProvider() === 'postgres') {
     const result = normalizedStatus
       ? await pgClient.query('SELECT * FROM submissions WHERE status = $1 ORDER BY created_at DESC', [normalizedStatus])
       : await pgClient.query('SELECT * FROM submissions ORDER BY created_at DESC');
@@ -904,7 +926,7 @@ async function createSubmission(payload) {
     updated_at: now,
   };
 
-  if (dbProvider === 'postgres') {
+  if (getDbProvider() === 'postgres') {
     await pgClient.query(
       `INSERT INTO submissions (
         id, title, url, desc, category, category_label, tag, email, status, submitted_at, reviewed_at, created_at, updated_at
@@ -955,7 +977,7 @@ async function updateSubmissionStatus(id, status) {
   const normalizedStatus = String(status || '').trim().toLowerCase();
   const reviewedAt = new Date().toISOString();
 
-  if (dbProvider === 'postgres') {
+  if (getDbProvider() === 'postgres') {
     const result = await pgClient.query(
       `UPDATE submissions
        SET status = $1, reviewed_at = $2, updated_at = $2
